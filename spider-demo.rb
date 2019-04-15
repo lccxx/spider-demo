@@ -35,10 +35,10 @@ def get_img_url_append_to_file(page_url)
   return if IMG_URLS.include?(page_url)
 
   page_uri = URI page_url
-	Net::HTTP.start(page_uri.host, use_ssl: page_uri.scheme == 'https') { |http|
-		http.verify_mode = 0
-		req = Net::HTTP::Get.new(page_uri.path)
-		req["User-Agent"] = USER_AGENTS[(rand * USER_AGENTS.size).to_i]
+  Net::HTTP.start(page_uri.host, use_ssl: page_uri.scheme == 'https') { |http|
+    http.verify_mode = 0
+    req = Net::HTTP::Get.new(page_uri.path)
+    req["User-Agent"] = USER_AGENTS[(rand * USER_AGENTS.size).to_i]
 
     res = http.request(req)
 
@@ -47,16 +47,16 @@ def get_img_url_append_to_file(page_url)
 
     doc = Nokogiri::HTML(res.body)
     img = doc.css("#imgTagWrapperId img").first if doc
-		img_src = img.attribute("data-old-hires") if img
+    img_src = img.attribute("data-old-hires") if img
 
     # 找不到图片地址也放弃
     return p [ img_src, page_url ] if not img_src
 
-		img_url = img_src.value.strip
+    img_url = img_src.value.strip
 
-		# 新增一列写入另外一个 csv
+    # 新增一列写入另外一个 csv
     File.open(TO_FILE, "ab") { |fo| fo.puts "#{p page_url},#{p img_url}" }
-	}
+  }
 end
 
 
