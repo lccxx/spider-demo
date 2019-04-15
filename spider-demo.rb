@@ -84,10 +84,13 @@ def work
   3.times {
     Thread.new {
       loop {
-        page_url = PAGE_URLS.shift
-        break if page_url.nil?
+	begin
+	  page_url = PAGE_URLS.shift
+	  break if page_url.nil?
 
-        get_img_url_append_to_file page_url
+	  get_img_url_append_to_file page_url
+        rescue => e
+        end
 
         sleep(3 + rand * 9)
       }
