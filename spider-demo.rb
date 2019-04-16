@@ -52,7 +52,7 @@ def get_img_url_append_to_file(page_url)
     img_url = img.attribute("src").value.strip if img && img_url.nil?
 
     # 找不到图片地址也放弃
-    return p [ img_url, page_url ] if not img_url
+    return p [ img_url, page_url ] if img_url.nil? || img_url.size == 0
 
     # 新增一列写入另外一个 csv
     File.open(TO_FILE, "ab") { |fo| fo.puts "#{p page_url},#{p img_url}" }
