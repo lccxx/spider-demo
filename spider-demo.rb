@@ -81,7 +81,7 @@ def work
 
 
   # 开启三个工作线程来获取图片
-  9.times {
+  19.times {
     Thread.new {
       loop {
 	begin
@@ -92,10 +92,10 @@ def work
         rescue => e
         end
 
-        sleep(3 + rand * 9)
+        sleep(1 + rand * 9)
       }
     }
-    sleep(3 + rand * 9)
+    sleep(1 + rand * 9)
   }
 
   return PAGE_URLS.size
