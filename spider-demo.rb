@@ -81,7 +81,7 @@ def work
 
 
   # 开启三个工作线程来获取图片
-  3.times {
+  9.times {
     Thread.new {
       loop {
 	begin
