@@ -5,12 +5,7 @@ require 'nokogiri'
 
 # 防止屏蔽，用于假冒的 User-Agent 的数组
 USER_AGENTS = [
-	"Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1",
-	"Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1",
-	"Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Mobile Safari/537.36",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36",
-	"Mozilla/5.0 (Linux; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0"
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
 ]
 
 # 当前脚本所在目录
@@ -47,7 +42,6 @@ def get_img_url_append_to_file(page_url)
 
     doc = Nokogiri::HTML(res.body)
     img = doc.css("#imgTagWrapperId img").first if doc
-    img = doc.css("#landing-image-wrapper img").first if not img
     img_src = img.attribute("data-old-hires") if img
     img_url = img_src.value.strip if img_src
     img_url = img.attribute("src").value.strip if img && img_url.nil?
