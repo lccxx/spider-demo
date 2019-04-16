@@ -47,12 +47,13 @@ def get_img_url_append_to_file(page_url)
 
     doc = Nokogiri::HTML(res.body)
     img = doc.css("#imgTagWrapperId img").first if doc
+    img = doc.css("#landing-image-wrapper img").first if not img
     img_src = img.attribute("data-old-hires") if img
     img_url = img_src.value.strip if img_src
     img_url = img.attribute("src").value.strip if img && img_url.nil?
 
     # 找不到图片地址也放弃
-    return p [ img_url, page_url ] if img_url.nil? || img_url.size == 0
+    return p [ img_url, img, page_url ] if img_url.nil? || img_url.size == 0
 
     # 新增一列写入另外一个 csv
     File.open(TO_FILE, "ab") { |fo| fo.puts "#{p page_url},#{p img_url}" }
