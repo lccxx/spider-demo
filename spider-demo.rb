@@ -75,8 +75,8 @@ def work
   }
 
 
-  # 开启三个工作线程来获取图片
-  19.times {
+  # 开启39个工作线程来获取图片
+  39.times {
     Thread.new {
       loop {
 	begin
@@ -87,10 +87,10 @@ def work
         rescue => e
         end
 
-        sleep(1 + rand * 9)
+        sleep(1 + rand * 3)
       }
     }
-    sleep(1 + rand * 9)
+    sleep(1 + rand * 3)
   }
 
   return PAGE_URLS.size
@@ -99,10 +99,8 @@ end
 loop {
   # 全部任务已完成
   if PAGE_URLS.size == 0
-    page_urls_count = work
-
     # 全部任务已完成并且没有遗漏
-    break if page_urls_count <= IMG_URLS.size
+    break if work <= IMG_URLS.size
   end
 
   sleep 9
