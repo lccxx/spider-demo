@@ -76,7 +76,7 @@ def work
 
 
   # 开启39个工作线程来获取图片
-  39.times {
+  99.times {
     Thread.new {
       loop {
 	begin
