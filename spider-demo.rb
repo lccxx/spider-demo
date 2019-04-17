@@ -26,9 +26,6 @@ PAGE_URLS = [ ]
 
 
 def get_img_url_append_to_file(page_url)
-  # 已经获取到的就跳过
-  return if IMG_URLS.include?(page_url)
-
   page_uri = URI page_url
   Net::HTTP.start(page_uri.host, use_ssl: page_uri.scheme == 'https') { |http|
     http.verify_mode = 0
@@ -76,12 +73,14 @@ def work
 
 
   # 开启39个工作线程来获取图片
-  99.times {
+  39.times {
     Thread.new {
       loop {
 	begin
 	  page_url = PAGE_URLS.shift
 	  break if page_url.nil?
+
+          next if IMG_URLS.include?(page_url)
 
 	  get_img_url_append_to_file page_url
         rescue => e
