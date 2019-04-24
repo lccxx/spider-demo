@@ -1,106 +1,56 @@
 #!/usr/bin/env ruby
 
+require "fileutils"
 require 'net/http'
 require 'nokogiri'
 
 # 防止屏蔽，用于假冒的 User-Agent 的数组
 USER_AGENTS = [
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
 ]
+
+# 搜索关键字
+KEYWORKS = [ "pullover", "Double-breasted" ]
 
 # 当前脚本所在目录
 DIR = File.dirname(File.absolute_path(__FILE__))
 
-# 从哪个文件读取
-FROM_FILE = File.join(DIR, "AmazoncompulloverWom01.csv")
-
-# 写到哪个文件去
-TO_FILE = File.join(DIR, "kju.csv")
+# 创建图片文件夹
+FileUtils.mkpath File.join(DIR, "images")
 
 
-# 已经获取到的图片
-IMG_URLS = [ ]
-
-# 需要获取的页面
-PAGE_URLS = [ ]
-
-
-def get_img_url_append_to_file(page_url)
-  page_uri = URI page_url
-  Net::HTTP.start(page_uri.host, use_ssl: page_uri.scheme == 'https') { |http|
+def amazon_get(path, args)
+  Net::HTTP.start("www.amazon.com", use_ssl: true) { |http|
     http.verify_mode = 0
-    req = Net::HTTP::Get.new(page_uri.path)
+    req = Net::HTTP::Get.new("#{path}#{args && args.is_a?(Hash) ? "?#{URI.encode_www_form(args.to_a)}" : ""}")
     req["User-Agent"] = USER_AGENTS[(rand * USER_AGENTS.size).to_i]
-
-    res = http.request(req)
-
-    # 被拒绝就放弃
-    return p [ req.to_hash, res.code ] if res.code != "200"
-
-    doc = Nokogiri::HTML(res.body)
-    img = doc.css("#imgTagWrapperId img").first if doc
-    img_src = img.attribute("data-old-hires") if img
-    img_url = img_src.value.strip if img_src
-    img_url = img.attribute("src").value.strip if img && img_url.nil?
-
-    # 找不到图片地址也放弃
-    return p [ img_url, img, page_url ] if img_url.nil? || img_url.size == 0
-
-    # 新增一列写入另外一个 csv
-    File.open(TO_FILE, "ab") { |fo| fo.puts "#{p page_url},#{p img_url}" }
+    
+    http.request(req)
   }
 end
 
+KEYWORKS.each { |kw|
+  res = amazon_get("/s", { k: kw })
+  doc = Nokogiri::HTML(res.body)
+  page_count = doc.css("ul.a-pagination li.a-disabled").last
+  page_count_num = page_count.text.to_i if page_count
 
-def work
-  IMG_URLS.clear
-  PAGE_URLS.clear
+  docs = [ doc ]
 
-  File.foreach(TO_FILE) { |line|
-    IMG_URLS << line.split(",")[0].strip
-  } if File.exists?(TO_FILE)
+  (2..page_count_num).each { |page|
+    res = amazon_get("/s", { k: kw, page: page })
+    docs << Nokogiri::HTML(res.body)
+  } if page_count_num
 
-  File.foreach(FROM_FILE) { |line|
-    # 拆分行为列
-    fields = line.split(",")
-
-    # url 在第一列
-    url = fields[0].strip
-    url = "https://#{url}" if not url[/^http/]
-
-    PAGE_URLS << url
+  docs.each { |doc|
+    p doc.css('img.s-image').each { |img|
+      img_src = img.attribute("src")
+      p img_src_value = img_src.value if img_src
+      filename = File.basename img_src_value
+      file = File.join(DIR, "images", filename)
+      next if File.exists?(file)
+      open(file, "wb") { |fo| fo.write Net::HTTP.get URI img_src_value }
+    }.size
   }
-
-
-  # 开启39个工作线程来获取图片
-  39.times {
-    Thread.new {
-      loop {
-	begin
-	  page_url = PAGE_URLS.shift
-	  break if page_url.nil?
-
-          next if IMG_URLS.include?(page_url)
-
-	  get_img_url_append_to_file page_url
-        rescue => e
-        end
-
-        sleep(1 + rand * 3)
-      }
-    }
-    sleep(1 + rand * 3)
-  }
-
-  return PAGE_URLS.size
-end
-
-loop {
-  # 全部任务已完成
-  if PAGE_URLS.size == 0
-    # 全部任务已完成并且没有遗漏
-    break if work <= IMG_URLS.size
-  end
-
-  sleep 9
 }
